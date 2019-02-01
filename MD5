@@ -1,0 +1,16 @@
+44c6b088a3617987ec54e611d4e7aace *DESCRIPTION
+e78c3f7d70b7f5dc1b88a3d768652a2f *NAMESPACE
+3293e11845b79d4ac888ecff3b4af408 *NEWS.md
+22c455b7e96a49f2abe32451de171cd5 *R/jskm.R
+989f0542bfe38a110536b60a0285aef0 *R/svyjskm.R
+9ba6cf865d206242f06fdcbd41779ced *README.md
+4cdf505872d0d519df6776a75a339203 *build/vignette.rds
+64d98e110f79b08fbd7d36629d34968c *inst/doc/jskm.R
+c148d95ddbf1a68eaed13782cc36142a *inst/doc/jskm.Rmd
+64ed5113dec93ec37bd6a0c957ef1de5 *inst/doc/jskm.html
+0cf3a3b0f5cf8c90c11ee195653bdec3 *man/jskm.Rd
+f1ba2dc3d8eb05c26c7671f25835fb43 *man/svyjskm.Rd
+151547813b81dfbb898a0baf62650c1d *tests/testthat.R
+b2cad1a1a0253dcdf82a9990b8a789dd *tests/testthat/Rplots.pdf
+529ffe60eefdb4be6f2e94d6d67fe616 *tests/testthat/test-km.R
+c148d95ddbf1a68eaed13782cc36142a *vignettes/jskm.Rmd

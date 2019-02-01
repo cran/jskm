@@ -1,0 +1,62 @@
+# jskm 0.2.7
+
+## Bug fixes
+
+* Fix some spell for cran release.
+
+## Update
+
+* Update **travis-ci**.
+
+* Add **appveyor** CI to test **window** environment. 
+
+
+# jskm 0.2.6
+
+## Bug fixes
+
+* Change `||`, `&&` to `|`, `&` for **Debian** environment. 
+
+* Set some variable's initial values to `NULL` for cran release.
+
+# jskm 0.2.5
+
+## Bug fixes
+
+* Remove gray rectangle above the **Number at risk** table.
+
+* Change **p-value** position according **ylims** option.
+
+## Update
+
+* Add **Numbers at risk** label option to `jskm`: `label.nrisk`, `size.label.nrisk`.
+
+* Add **percent scale** option : `surv.scale`.
+
+* Add **pvalue position & font size** option : `pval.size`, `pval.coord` 
+
+# jskm 0.2.4
+
+## Update
+
+* Add **ci** option to `svyjskm`.
+
+* Get **p-value** without **design** option in `svyjskm`
+
+# jskm 0.2.2
+
+* Apply **testthat**
+
+# jskm 0.2.1
+
+* Can run when reactive data
+
+# jskm 0.2.0
+
+## New function
+
+* `svyjskm` : Weighted Kaplan-Meier plot - `svykm.object` in **survey** package
+
+# jskm 0.1.0
+
+* `frailty`, `cluster` options and their **p value**
