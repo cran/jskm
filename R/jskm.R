@@ -70,7 +70,7 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom plyr rbind.fill
 #' @importFrom stats pchisq time as.formula
-#' @importFrom survival survfit survdiff coxph Surv
+#' @importFrom survival survfit survdiff coxph Surv cluster frailty
 #' @export
  
 
@@ -276,19 +276,19 @@ jskm <- function(sfit,
       data = eval(sfit$call$data)
     }
   
-    sdiff <- survival::survdiff(eval(sfit$call$formula), data = data)
+    sdiff <- survival::survdiff(as.formula(sfit$call$formula), data = data)
     pvalue <- pchisq(sdiff$chisq,length(sdiff$n) - 1,lower.tail = FALSE)
     
     ## cluster option
     if (cluster.option == "cluster" & !is.null(cluster.var)){
       form.old = as.character(sfit$call$formula)
       form.new = paste(form.old[2], form.old[1], " + ", form.old[3], " + cluster(", cluster.var, ")", sep="")
-      sdiff <- survival::coxph(as.formula(form.new), data = data)
+      sdiff <- survival::coxph(as.formula(form.new), data = data, model = T)
       pvalue <- summary(sdiff)$robscore["pvalue"]
     } else if (cluster.option == "frailty" & !is.null(cluster.var)){
       form.old = as.character(sfit$call$formula)
       form.new = paste(form.old[2], form.old[1], " + ", form.old[3], " + frailty(", cluster.var, ")", sep="")
-      sdiff <- survival::coxph(as.formula(form.new), data =data)
+      sdiff <- survival::coxph(as.formula(form.new), data =data, model = T)
       pvalue <- summary(sdiff)$logtest["pvalue"]
     }
     
@@ -306,6 +306,7 @@ jskm <- function(sfit,
   # Create table graphic to include at-risk numbers #
   ###################################################
   
+  n.risk <- NULL
   if(length(levels(summary(sfit)$strata)) == 0) {
     Factor <- factor(rep("All",length(subs3)))
   } else {

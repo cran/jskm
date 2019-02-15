@@ -1,3 +1,19 @@
+# jskm 0.3.0
+
+## New feature
+
+* Add **Number at risk table** option to `svyjskm`. The number at risk is no-weighted values (same to `jskm`).  
+
+## Bug fixes
+
+* Appropriate default **pval.coord** in `svyjskm`.
+
+# jskm 0.2.8
+
+## Bug fixes
+
+* Add namespace **survival::frailty, survival::cluster**.
+
 # jskm 0.2.7
 
 ## Bug fixes
