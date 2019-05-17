@@ -1,10 +1,16 @@
+# jskm 0.3.5
+
+## Fix
+
+* Apply appropriate p-value to `svyjskm`
+
 # jskm 0.3.1
 
 ## Update
 
 * The p-value is expressed as the value rounded to the 3rd decimal place.
 
-* Add **pval.testname** option, p-value is expressed with **(Log-rank)** text if **pval.testname == T**.
+* Add **pval.testname** option, p-value is expressed with **(Log-rank)** text if **pval.testname = T**.
 
 # jskm 0.3.0
 
