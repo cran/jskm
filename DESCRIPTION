@@ -1,7 +1,7 @@
 Package: jskm
 Title: Kaplan-Meier Plot with 'ggplot2'
-Version: 0.3.5
-Date: 2019-05-17
+Version: 0.3.6
+Date: 2019-09-04
 Authors@R: c(person("Jinseob", "Kim", email = "jinseob2kim@gmail.com", role = c("aut", "cre"),  comment = c(ORCID = "0000-0002-9403-605X")),
              person("Zarathu", role = c("cph", "fnd"))
              )
@@ -17,9 +17,9 @@ BugReports: https://github.com/jinseob2kim/jstable/issues
 Suggests: testthat, knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2019-05-17 08:15:20 UTC; js
+Packaged: 2019-09-04 01:31:54 UTC; js
 Author: Jinseob Kim [aut, cre] (<https://orcid.org/0000-0002-9403-605X>),
   Zarathu [cph, fnd]
 Maintainer: Jinseob Kim <jinseob2kim@gmail.com>
 Repository: CRAN
-Date/Publication: 2019-05-17 08:52:08 UTC
+Date/Publication: 2019-09-04 05:10:19 UTC
