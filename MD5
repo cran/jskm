@@ -1,13 +1,13 @@
-66b274ec44071f5c693293af7d08cdbb *DESCRIPTION
+9bf7f31140c42ab03c048d61c9b73de0 *DESCRIPTION
 b892ff58260562ccc799c77bbed5fb97 *NAMESPACE
-508883043edefef771218f90801bc0dc *NEWS.md
-73c44a584971144935afb624c64956cb *R/jskm.R
+bd9c7632932167a9a9c71eefc8609abc *NEWS.md
+5c4de595e7578afed0a0a059e5ef30d9 *R/jskm.R
 e1299a48ed376e1878f4a836527e5266 *R/svyjskm.R
 9a6955fa148174a2af7d8293471556c6 *README.md
 4c5f9138773c2b3aa939590d11a00f53 *build/vignette.rds
 64d98e110f79b08fbd7d36629d34968c *inst/doc/jskm.R
 c148d95ddbf1a68eaed13782cc36142a *inst/doc/jskm.Rmd
-2ee958c2280d5eb604a979cfa9655206 *inst/doc/jskm.html
+36d17a3fdf5a1957f01bd3621241c364 *inst/doc/jskm.html
 1f142e1bfcbb209d5fde5870e5a83ddb *man/figures/README-unnamed-chunk-1-1.png
 ba3c78c2af639d6b9ec945c71e8a0b94 *man/figures/README-unnamed-chunk-1-2.png
 f25884470e12eefefc97916a0b33aff3 *man/figures/README-unnamed-chunk-2-1.png
