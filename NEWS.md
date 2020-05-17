@@ -1,3 +1,7 @@
+# jskm 0.3.9
+
+* Bug fixes: show p value "< 0.001" when p < 0.001
+
 # jskm 0.3.8
 
 * Bug fixes: Incorrect p-value when applying cluster options.  
