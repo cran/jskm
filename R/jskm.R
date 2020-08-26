@@ -29,7 +29,8 @@
 #' @param cumhaz Show cumulaive hazard function, Default: F
 #' @param cluster.option Cluster option for p value, Option: "None", "cluster", "frailty", Default: "None"
 #' @param cluster.var Cluster variable
-#' @param data select specific data - for reactive input. Default = NULL
+#' @param data select specific data - for reactive input, Default = NULL
+#' @param cut.landmark cut-off for landmark analysis, Default = NULL
 #' @param ... PARAM_DESCRIPTION
 #' @return Plot
 #' @details DETAILS
@@ -69,7 +70,6 @@
 #' @importFrom ggplot2 geom_ribbon
 #' @importFrom grid unit
 #' @importFrom gridExtra grid.arrange
-#' @importFrom plyr rbind.fill
 #' @importFrom stats pchisq time as.formula
 #' @importFrom survival survfit survdiff coxph Surv cluster frailty
 #' @export
@@ -104,6 +104,7 @@ jskm <- function(sfit,
                  cluster.option = "None",
                  cluster.var = NULL,
                  data = NULL,
+                 cut.landmark = NULL,
                  ...) {
   
   
@@ -184,16 +185,58 @@ jskm <- function(sfit,
     lower = sfit$lower[subs2]
   )
   
+  form <- sfit$call$formula
+
+  if (!is.null(cut.landmark)){
+    if (is.null(data)){
+      data <- tryCatch(eval(sfit$call$data), error = function(e) e)
+      if ("error" %in% class(data)){
+        stop("Landmark analysis requires data object. please input 'data' option") 
+      }
+    }
+    
+    var.time <- as.character(form[[2]][[2]])
+    var.event <- as.character(form[[2]][[3]])
+    if (length(var.event) > 1){
+      var.event <- setdiff(var.event, as.character(as.symbol(var.event)))
+      var.event <- var.event[sapply(var.event, function(x) {"warning" %in% class(tryCatch(as.numeric(x), warning = function(w) w))})]
+    }
+    data1 <- data
+    data1[[var.event]][data1[[var.time]] >= cut.landmark] <- 0
+    data1[[var.time]][data1[[var.time]] >= cut.landmark] <- cut.landmark
+  
+    sfit1 <- survfit(as.formula(form), data1)
+    sfit2 <- survfit(as.formula(form), data[data[[var.time]] >= cut.landmark, ])
+    
+    if (length(levels(Factor)) == 1){
+      df2 <- merge(subset(df, time >= cut.landmark)[, c("time", "n.risk", "n.event", "n.censor", "strata")], 
+                   data.frame(time = sfit2$time, surv = sfit2$surv, strata = "All", upper = sfit2$upper, lower = sfit2$lower), 
+                   by = c("time", "strata"))
+    } else{
+      df2 <- merge(subset(df, time >= cut.landmark)[, c("time", "n.risk", "n.event", "n.censor", "strata")], 
+                   data.frame(time = sfit2$time, surv = sfit2$surv, strata = rep(names(sfit2$strata), sfit2$strata), upper = sfit2$upper, lower = sfit2$lower), 
+                   by = c("time", "strata"))
+    }
+    
+    
+    
+    df11 <- rbind(subset(df, time < cut.landmark), df2) 
+    df <- rbind(df11, data.frame(time = cut.landmark, n.risk = summary(sfit, times = cut.landmark)$n.risk,  n.event = 0, n.censor = 0, surv = 1, strata = factor(ystratalabs, levels = levels(df$strata)), upper = 1, lower = 1))
+  }
+  
+  
   if (cumhaz){
-    df$surv = 1 - sfit$surv[subs2]
-    df$lower = 1 - sfit$upper[subs2]
-    df$upper = 1 - sfit$lower[subs2]
+    upper.new <- 1 - df$lower
+    lower.new <- 1 - df$upper
+    df$surv = 1 - df$surv
+    df$lower = lower.new
+    df$upper = upper.new
     
   }
   
   #Final changes to data for survival plot
   levels(df$strata) <- ystratalabs
-  zeros <- data.frame(time = 0, surv = 1,
+  zeros <- data.frame(time = 0, n.risk = NA, n.event = NA, n.censor = NA, surv = 1,
                       strata = factor(ystratalabs, levels=levels(df$strata)),
                       upper = 1, lower = 1)
   if (cumhaz){
@@ -202,7 +245,7 @@ jskm <- function(sfit,
     zeros$upper = 0
   }
   
-  df <- plyr::rbind.fill(zeros, df)
+  df <- rbind(zeros, df)
   d <- length(levels(df$strata))
   
   ###################################
@@ -253,9 +296,16 @@ jskm <- function(sfit,
     p <- p + theme(legend.position="none")
   
   #Add lines too plot
-  p <- p + geom_step(size = 0.75) +
-    scale_linetype_manual(name = ystrataname, values=linetype) +
-    scale_colour_brewer(name = ystrataname, palette=linecols)
+  if (is.null(cut.landmark)){
+    p <- p + geom_step(size = 0.75) +
+      scale_linetype_manual(name = ystrataname, values=linetype) +
+      scale_colour_brewer(name = ystrataname, palette=linecols)
+  } else{
+    p <- p + geom_step(data = subset(df, time < cut.landmark), size = 0.75) + geom_step(data = subset(df, time >= cut.landmark), size = 0.75) + 
+      scale_linetype_manual(name = ystrataname, values=linetype) +
+      scale_colour_brewer(name = ystrataname, palette=linecols)
+  }
+  
   
   #Add censoring marks to the line:
   if(marks == TRUE)
@@ -270,6 +320,10 @@ jskm <- function(sfit,
     } 
   }
   
+  if (!is.null(cut.landmark)){
+    p <- p + geom_vline(xintercept = cut.landmark, lty = 2)
+  }
+  
   ## Create a blank plot for place-holding
   blank.pic <- ggplot(df, aes(time, surv)) +
     geom_blank() + theme_void() +             ## Remove gray color
@@ -282,40 +336,74 @@ jskm <- function(sfit,
   # p-value placement #
   #####################a
   
-  if(length(levels(summary(sfit)$strata)) == 0) pval <- FALSE
+  if(length(levels(summary(sfit)$strata)) == 0) pval <- F
+  #if(!is.null(cut.landmark)) pval <- F
   
   if(pval == TRUE) {
     if (is.null(data)){
-      data = eval(sfit$call$data)
+      data <- tryCatch(eval(sfit$call$data), error = function(e) e)
+      if ("error" %in% class(data)){
+        stop("'pval' option requires data object. please input 'data' option") 
+      }
+    }
+    
+    if (is.null(cut.landmark)){
+      sdiff <- survival::survdiff(as.formula(form), data = data)
+      pvalue <- pchisq(sdiff$chisq,length(sdiff$n) - 1,lower.tail = FALSE)
+      
+      ## cluster option
+      if (cluster.option == "cluster" & !is.null(cluster.var)){
+        form.old <- as.character(form)
+        form.new <- paste(form.old[2], form.old[1], " + ", form.old[3], " + cluster(", cluster.var, ")", sep="")
+        sdiff <- survival::coxph(as.formula(form.new), data = data, model = T, robust = T)
+        pvalue <- summary(sdiff)$robscore["pvalue"]
+      } else if (cluster.option == "frailty" & !is.null(cluster.var)){
+        form.old <- as.character(form)
+        form.new <- paste(form.old[2], form.old[1], " + ", form.old[3], " + frailty(", cluster.var, ")", sep="")
+        sdiff <- survival::coxph(as.formula(form.new), data =data, model = T)
+        pvalue <- summary(sdiff)$logtest["pvalue"]
+      }
+      
+      pvaltxt <- ifelse(pvalue < 0.001, "p < 0.001", paste("p =", round(pvalue, 3)))
+      if (pval.testname) pvaltxt <- paste0(pvaltxt, " (Log-rank)")
+      
+      # MOVE P-VALUE LEGEND HERE BELOW [set x and y]
+      if (is.null(pval.coord)){
+        p <- p + annotate("text",x = (as.integer(max(sfit$time)/5)), y = 0.1 + ylims[1],label = pvaltxt, size  = pval.size)
+      } else{
+        p <- p + annotate("text",x = pval.coord[1], y = pval.coord[2], label = pvaltxt, size  = pval.size)
+      }
+    } else {
+      sdiff1 <- survival::survdiff(as.formula(form), data1)
+      sdiff2 <- survival::survdiff(as.formula(form), data[data[[var.time]] >= cut.landmark, ])
+      pvalue <- sapply(list(sdiff1, sdiff2), function(x){pchisq(x$chisq,length(x$n) - 1,lower.tail = FALSE)})
+      
+      ## cluster option
+      if (cluster.option == "cluster" & !is.null(cluster.var)){
+        form.old <- as.character(form)
+        form.new <- paste(form.old[2], form.old[1], " + ", form.old[3], " + cluster(", cluster.var, ")", sep="")
+        sdiff1 <- survival::coxph(as.formula(form.new), data = data1, model = T, robust = T)
+        sdiff2 <- survival::coxph(as.formula(form.new), data = data[data[[var.time]] >= cut.landmark, ], model = T, robust = T)
+        pvalue <- sapply(list(sdiff1, sdiff2), function(x){summary(x)$robscore["pvalue"]})
+      } else if (cluster.option == "frailty" & !is.null(cluster.var)){
+        form.old <- as.character(form)
+        form.new <- paste(form.old[2], form.old[1], " + ", form.old[3], " + frailty(", cluster.var, ")", sep="")
+        sdiff1 <- survival::coxph(as.formula(form.new), data = data1, model = T)
+        sdiff2 <- survival::coxph(as.formula(form.new), data = data[data[[var.time]] >= cut.landmark, ], model = T)
+        pvalue <- sapply(list(sdiff1, sdiff2), function(x){summary(x)$logtest["pvalue"]})
+      }
+      
+      pvaltxt <- ifelse(pvalue < 0.001, "p < 0.001", paste("p =", round(pvalue, 3)))
+      
+      if (pval.testname) pvaltxt <- paste0(pvaltxt, " (Log-rank)")
+      
+      if (is.null(pval.coord)){
+        p <- p + annotate("text",x = c(as.integer(max(sfit$time)/10), as.integer(max(sfit$time)/10) + cut.landmark), y = 0.1 + ylims[1],label = pvaltxt, size  = pval.size)
+      } else{
+        p <- p + annotate("text",x = c(pval.coord[1], pval.coord[1] + cut.landmark), y = pval.coord[2], label = pvaltxt, size  = pval.size)
+      }
     }
   
-    sdiff <- survival::survdiff(as.formula(sfit$call$formula), data = data)
-    pvalue <- pchisq(sdiff$chisq,length(sdiff$n) - 1,lower.tail = FALSE)
-    
-    ## cluster option
-    if (cluster.option == "cluster" & !is.null(cluster.var)){
-      form.old <- as.character(sfit$call$formula)
-      form.new <- paste(form.old[2], form.old[1], " + ", form.old[3], " + cluster(", cluster.var, ")", sep="")
-      sdiff <- survival::coxph(as.formula(form.new), data = data, model = T, robust = T)
-      pvalue <- summary(sdiff)$robscore["pvalue"]
-    } else if (cluster.option == "frailty" & !is.null(cluster.var)){
-      form.old <- as.character(sfit$call$formula)
-      form.new <- paste(form.old[2], form.old[1], " + ", form.old[3], " + frailty(", cluster.var, ")", sep="")
-      sdiff <- survival::coxph(as.formula(form.new), data =data, model = T)
-      pvalue <- summary(sdiff)$logtest["pvalue"]
-    }
-    
-    pvaltxt <- ifelse(pvalue < 0.001,"p < 0.001",paste("p =", round(pvalue, 3)))
-    
-    if (pval.testname) pvaltxt <- paste0(pvaltxt, " (Log-rank)")
-    
-    # MOVE P-VALUE LEGEND HERE BELOW [set x and y]
-    if (is.null(pval.coord)){
-      p <- p + annotate("text",x = (as.integer(max(sfit$time)/5)), y = 0.1 + ylims[1],label = pvaltxt, size  = pval.size)
-    } else{
-      p <- p + annotate("text",x = pval.coord[1], y = pval.coord[2], label = pvaltxt, size  = pval.size)
-    }
-    
   }
   
   ###################################################

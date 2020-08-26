@@ -25,6 +25,7 @@
 #' @param table logical: Create a table graphic below the K-M plot, indicating at-risk numbers?
 #' @param label.nrisk Numbers at risk label. Default = "Numbers at risk"
 #' @param size.label.nrisk Font size of label.nrisk. Default = 10
+#' @param cut.landmark cut-off for landmark analysis, Default = NULL
 #' @param ... PARAM_DESCRIPTION
 #' @return plot
 #' @details DETAILS
@@ -69,6 +70,7 @@ svyjskm <- function(sfit,
                     table = F,
                     label.nrisk = "Numbers at risk",
                     size.label.nrisk = 10,
+                    cut.landmark = NULL,
                     ...) {
   
   surv <- strata <- lower <- upper <- NULL
@@ -83,19 +85,65 @@ svyjskm <- function(sfit,
       }
   }
   
+  if (is.null(ci)){
+    if (class(sfit) == "svykmlist"){
+      ci <- "varlog" %in% names(sfit[[1]])
+    } else if (class(sfit) == "svykm"){
+      ci <- "varlog" %in% names(sfit)
+    }
+  }
+  
+  
+  if (ci & !is.null(cut.landmark)){
+    if (is.null(design)){
+      design <- tryCatch(get(as.character(attr(sfit, "call")$design)), error = function(e) e)
+      if ("error" %in% class(design)){
+        stop("'pval' option requires design object. please input 'design' option") 
+      }
+    }
+    var.time <- as.character(formula(sfit)[[2]][[2]])
+    var.event <- as.character(formula(sfit)[[2]][[3]])
+    if (length(var.event) > 1){
+      var.event <- setdiff(var.event, as.character(as.symbol(var.event)))
+      var.event <- var.event[sapply(var.event, function(x) {"warning" %in% class(tryCatch(as.numeric(x), warning = function(w) w))})]
+    }
+    design1 <- design
+    design1$variables[[var.event]][design1$variables[[var.time]] >= cut.landmark] <- 0
+    design1$variables[[var.time]][design1$variables[[var.time]] >= cut.landmark] <- cut.landmark
+    
+    sfit2 <- survey::svykm(formula(sfit), design = subset(design, get(var.time) >= cut.landmark), se = T)
+  }
+  
+  
+  
+  
   if (class(sfit) == "svykmlist"){
     if(is.null(ystrataname)) ystrataname <- as.character(formula(sfit)[[3]])
-    if (is.null(ci)){
-      ci <- "varlog" %in% names(sfit[[1]])
-    }
+
     if (ci){
       if ("varlog" %in% names(sfit[[1]])){
-        df <- Reduce(rbind, lapply(names(sfit), function(x){data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv, "lower" = pmax(0, exp(log(sfit[[x]]$surv) - 1.96 * sqrt(sfit[[x]]$varlog))), "upper" = pmin(1, exp(log(sfit[[x]]$surv) + 1.96 * sqrt(sfit[[x]]$varlog))))}))
+        df <- do.call(rbind, lapply(names(sfit), function(x){data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv, "lower" = pmax(0, exp(log(sfit[[x]]$surv) - 1.96 * sqrt(sfit[[x]]$varlog))), "upper" = pmin(1, exp(log(sfit[[x]]$surv) + 1.96 * sqrt(sfit[[x]]$varlog))))}))
+        if (!is.null(cut.landmark)){
+          df2 <- do.call(rbind, lapply(names(sfit2), function(x){data.frame("strata" = x, "time" = sfit2[[x]]$time, "surv" = sfit2[[x]]$surv, "lower" = pmax(0, exp(log(sfit2[[x]]$surv) - 1.96 * sqrt(sfit2[[x]]$varlog))), "upper" = pmin(1, exp(log(sfit2[[x]]$surv) + 1.96 * sqrt(sfit2[[x]]$varlog))))}))
+          df <- rbind(df[df$time < cut.landmark, ], data.frame("strata" = unique(df$strata), "time" = cut.landmark, "surv" = 1, "lower" = 1, "upper" = 1), df2)
+        }
+        
       } else{
         stop("No CI information in svykmlist object. please run svykm with se = T option.")
       }
     } else{
-      df <- Reduce(rbind, lapply(names(sfit), function(x){data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv)}))
+      df <- do.call(rbind, lapply(names(sfit), function(x){data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv)}))
+      if (!is.null(cut.landmark)){
+        for (v in unique(df$strata)){
+          if (nrow(subset(df, time == cut.landmark & strata == v)) == 0){
+            df <- rbind(df, data.frame(strata = v, time = cut.landmark, surv = 1))
+          } else{
+            df[df$time == cut.landmark & df$strata == v, "surv"] <- 1
+          }
+          
+          df[df$time > cut.landmark & df$strata == v, "surv"] <- df[df$time > cut.landmark & df$strata == v, "surv"]/min(df[df$time < cut.landmark & df$strata == v, "surv"])
+        }
+      }
     }
     
     df$strata <- as.factor(df$strata)
@@ -109,17 +157,28 @@ svyjskm <- function(sfit,
     
   } else if(class(sfit) == "svykm"){
     if(is.null(ystrataname)) ystrataname <- "Strata"
-    if (is.null(ci)){
-      ci <- "varlog" %in% names(sfit)
-    }
+
     if (ci){
       if ("varlog" %in% names(sfit)){
         df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv,  "lower" = pmax(0, exp(log(sfit$surv) - 1.96 * sqrt(sfit$varlog))), "upper" = pmax(0, exp(log(sfit$surv) + 1.96 * sqrt(sfit$varlog))))
+        if (!is.null(cut.landmark)){
+          df2 <- data.frame("strata" = "All", "time" = sfit2$time, "surv" = sfit2$surv,  "lower" = pmax(0, exp(log(sfit2$surv) - 1.96 * sqrt(sfit2$varlog))), "upper" = pmax(0, exp(log(sfit2$surv) + 1.96 * sqrt(sfit2$varlog))))
+          df <- rbind(df[df$time < cut.landmark, ], data.frame("strata" = "All", "time" = cut.landmark, "surv" = 1, "lower" = 1, "upper" = 1), df2)
+        }
       } else{
         stop("No CI information in svykm object. please run svykm with se = T option.")
       }
     } else{
       df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv)
+      if (!is.null(cut.landmark)){
+        if (nrow(subset(df, time == cut.landmark)) == 0){
+          df <- rbind(df, data.frame(strata = "All", time = cut.landmark, surv = 1))
+        } else{
+          df[df$time == cut.landmark, "surv"] <- 1
+        }
+        
+        df[df$time > cut.landmark, "surv"] <- df[df$time > cut.landmark, "surv"]/min(df[df$time < cut.landmark, "surv"])
+      }
     }
     
     times <- seq(0, max(sfit$time), by = timeby)
@@ -140,8 +199,10 @@ svyjskm <- function(sfit,
   if (cumhaz){
     df$surv <- 1 - df$surv
     if (ci){
-      df$lower <- 1 - df$upper
-      df$upper <- 1 - df$lower
+      upper.new <- 1 - df$lower
+      lower.new <- 1 - df$upper
+      df$lower = lower.new
+      df$upper = upper.new
     }
     }
   
@@ -211,12 +272,18 @@ svyjskm <- function(sfit,
     p <- p + theme(legend.position="none")
   
   #Add lines too plot
-  p <- p + geom_step(size = 0.75) +
-    scale_linetype_manual(name = ystrataname, values=linetype) +
-    scale_colour_brewer(name = ystrataname, palette=linecols)
+  if (is.null(cut.landmark)){
+    p <- p + geom_step(size = 0.75) +
+      scale_linetype_manual(name = ystrataname, values=linetype) +
+      scale_colour_brewer(name = ystrataname, palette=linecols)
+  } else{
+    p <- p + geom_step(data = subset(df, time < cut.landmark), size = 0.75) + geom_step(data = subset(df, time >= cut.landmark), size = 0.75) + 
+      scale_linetype_manual(name = ystrataname, values=linetype) +
+      scale_colour_brewer(name = ystrataname, palette=linecols)
+  }
   
   #Add 95% CI to plot
-  if(ci == TRUE){
+  if(ci){
     if (linecols2 == "black"){
       p <- p +  geom_ribbon(data=df, aes(ymin = lower, ymax = upper), alpha=0.25, colour=NA) 
     } else{
@@ -224,27 +291,67 @@ svyjskm <- function(sfit,
     } 
   }
   
+  if (!is.null(cut.landmark)){
+    p <- p + geom_vline(xintercept = cut.landmark, lty = 2)
+  }
+  
   ## p-value
   if(class(sfit) == "svykm") pval <- FALSE
   #if(is.null(design)) pval <- FALSE
   
-  if(pval == TRUE) {
-    if(is.null(design)){
-      sdiff <- survey::svylogrank(formula(sfit), design = get(as.character(attr(sfit, "call")$design)))
-    } else{
+  if(pval) {
+    if (is.null(design)){
+      design <- tryCatch(get(as.character(attr(sfit, "call")$design)), error = function(e) e)
+      if ("error" %in% class(design)){
+        stop("'pval' option requires design object. please input 'design' option") 
+      }
+    }
+    
+    if (is.null(cut.landmark)){
       sdiff <- survey::svylogrank(formula(sfit), design = design)
-    }
-    pvalue <- sdiff[[2]][2]
-    
-    pvaltxt <- ifelse(pvalue < 0.001,"p < 0.001",paste("p =", round(pvalue, 3)))
-    if (pval.testname) pvaltxt <- paste0(pvaltxt, " (Log-rank)")
-    
-    # MOVE P-VALUE LEGEND HERE BELOW [set x and y]
-    if (is.null(pval.coord)){
-      p <- p + annotate("text",x = (as.integer(max(sapply(sfit, function(x){max(x$time)/5})))), y = 0.1 + ylims[1],label = pvaltxt, size  = pval.size)
+      pvalue <- sdiff[[2]][2]
+      
+      pvaltxt <- ifelse(pvalue < 0.001, "p < 0.001", paste("p =", round(pvalue, 3)))
+      if (pval.testname) pvaltxt <- paste0(pvaltxt, " (Log-rank)")
+      
+      # MOVE P-VALUE LEGEND HERE BELOW [set x and y]
+      if (is.null(pval.coord)){
+        p <- p + annotate("text",x = as.integer(max(sapply(sfit, function(x){max(x$time)/10}))), y = 0.1 + ylims[1],label = pvaltxt, size  = pval.size)
+      } else{
+        p <- p + annotate("text",x = pval.coord[1], y = pval.coord[2], label = pvaltxt, size  = pval.size)
+      } 
     } else{
-      p <- p + annotate("text",x = pval.coord[1], y = pval.coord[2], label = pvaltxt, size  = pval.size)
+      if (is.null(design)){
+        design <- tryCatch(get(as.character(attr(sfit, "call")$design)), error = function(e) e)
+        if ("error" %in% class(design)){
+          stop("'pval' option requires design object. please input 'design' option") 
+        }
+      }
+      var.time <- as.character(formula(sfit)[[2]][[2]])
+      var.event <- as.character(formula(sfit)[[2]][[3]])
+      if (length(var.event) > 1){
+        var.event <- setdiff(var.event, as.character(as.symbol(var.event)))
+        var.event <- var.event[sapply(var.event, function(x) {"warning" %in% class(tryCatch(as.numeric(x), warning = function(w) w))})]
+      }
+      design1 <- design
+      design1$variables[[var.event]][design1$variables[[var.time]] >= cut.landmark] <- 0
+      design1$variables[[var.time]][design1$variables[[var.time]] >= cut.landmark] <- cut.landmark
+      
+      sdiff1 <- survey::svylogrank(formula(sfit), design = design1)
+      sdiff2 <- survey::svylogrank(formula(sfit), design = subset(design, get(var.time) >= cut.landmark))
+      pvalue <- sapply(list(sdiff1, sdiff2), function(x){x[[2]][2]})
+      
+      pvaltxt <- ifelse(pvalue < 0.001, "p < 0.001", paste("p =", round(pvalue, 3)))
+      if (pval.testname) pvaltxt <- paste0(pvaltxt, " (Log-rank)")
+      
+      if (is.null(pval.coord)){
+        p <- p + annotate("text",x = c(as.integer(max(sapply(sfit, function(x){max(x$time)/10}))), as.integer(max(sapply(sfit, function(x){max(x$time)/10}))) + cut.landmark), y = 0.1 + ylims[1],label = pvaltxt, size  = pval.size)
+      } else{
+        p <- p + annotate("text",x = c(pval.coord[1], pval.coord[1] + cut.landmark), y = pval.coord[2], label = pvaltxt, size  = pval.size)
+      }
+      
     }
+    
   }
   
   ## Create a blank plot for place-holding

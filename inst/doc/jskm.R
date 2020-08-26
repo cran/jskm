@@ -21,6 +21,9 @@ jskm(fit, table = T, pval = T, label.nrisk = "No. at risk", size.label.nrisk = 8
 jskm(fit, ci = T, cumhaz = T,  mark = F, ylab = "Cumulative hazard (%)", surv.scale = "percent", pval =T, pval.size = 6, pval.coord = c(300, 0.7))
 
 ## -----------------------------------------------------------------------------
+jskm(fit, mark = F,  surv.scale = "percent", pval =T, table = T, cut.landmark = 500)
+
+## -----------------------------------------------------------------------------
 library(survey)
 data(pbc, package="survival")
 pbc$randomized <- with(pbc, !is.na(trt) & trt>0)
@@ -40,4 +43,5 @@ svyjskm(s2, cumhaz = T, ylab = "Cumulative hazard(%)", surv.scale = "percent")
 s3 <- svykm(Surv(time,status>0) ~ sex, design=dpbc, se = T)
 svyjskm(s3)
 svyjskm(s3, ci = F)
+svyjskm(s3, ci = F,  surv.scale = "percent", pval = T, table = T, cut.landmark = 1000)
 
