@@ -1,13 +1,13 @@
-5c9b21b49bd97121fdf75144ad5bd077 *DESCRIPTION
-8e88720ee77c156fa45e10f19aa18436 *NAMESPACE
-946557bc7c1c59159d6caaa1f165ef26 *NEWS.md
-511b2c5e6288e21b55763a1bb7bee5fa *R/jskm.R
-e36c3940015a8c9690640941c61e5c32 *R/svyjskm.R
+9bdb9fc27bfbc2003f6bd3002e133fb7 *DESCRIPTION
+52a58c8ac51e8cca9eba5d338cca4a7e *NAMESPACE
+4c26122d82b477bfb44a8a6ec870eed1 *NEWS.md
+748e6ce9c3cab7aa9fedbe54b0ae3edb *R/jskm.R
+a99b38fd1b4bd618736f7dfec1b7cad7 *R/svyjskm.R
 8e0a5224a42fe39bb52478ceca21bb5f *README.md
-2fd6b579cad0005f428a1ed24e6c4701 *build/vignette.rds
+cd6b58763d63a1ce7f2fff3e5dd4a0d7 *build/vignette.rds
 621fac3184e9b79e0f27118e894e86c8 *inst/doc/jskm.R
 d39654ca04da45aab275d0bf67f5ea70 *inst/doc/jskm.Rmd
-451d8a0b11af3b536d0b67ae9adb47f5 *inst/doc/jskm.html
+4c71a5fa1a30c9404fe3e962f0362625 *inst/doc/jskm.html
 88a72f156d360e2ba24699f194c32217 *man/figures/README-unnamed-chunk-1-1.png
 c044882960f4d996f61faf6ac97aac76 *man/figures/README-unnamed-chunk-1-2.png
 d8326b13aa3ef2718fa7d690fd7b9268 *man/figures/README-unnamed-chunk-2-1.png
@@ -24,5 +24,5 @@ f9040f8bb3447efe7199294c45e9d076 *man/figures/README-unnamed-chunk-5-2.png
 fe96289995be930271c04cde8e17ee2c *man/svyjskm.Rd
 151547813b81dfbb898a0baf62650c1d *tests/testthat.R
 b2cad1a1a0253dcdf82a9990b8a789dd *tests/testthat/Rplots.pdf
-ecee193d8b3b48ed319f63837ba9466e *tests/testthat/test-km.R
+b91ed8f1121f32503053fd50b27be34b *tests/testthat/test-km.R
 d39654ca04da45aab275d0bf67f5ea70 *vignettes/jskm.Rmd
