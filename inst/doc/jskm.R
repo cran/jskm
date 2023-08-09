@@ -24,6 +24,15 @@ jskm(fit, ci = T, cumhaz = T,  mark = F, ylab = "Cumulative incidence (%)", surv
 jskm(fit, mark = F,  surv.scale = "percent", pval =T, table = T, cut.landmark = 500, showpercent = T)
 
 ## -----------------------------------------------------------------------------
+## Make competing risk variable, Not real
+colon$status2 <- colon$status
+colon$status2[1:400] <- 2
+colon$status2 <- factor(colon$status2)
+fit2 <- survfit(Surv(time,status2)~rx, data=colon)
+jskm(fit2, mark = F, surv.scale = "percent", table = T, status.cmprsk = "1")
+jskm(fit2, mark = F, surv.scale = "percent", table = T, status.cmprsk = "1", showpercent = T, cut.landmark = 500)
+
+## -----------------------------------------------------------------------------
 library(survey)
 data(pbc, package="survival")
 pbc$randomized <- with(pbc, !is.na(trt) & trt>0)

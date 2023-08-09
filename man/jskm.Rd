@@ -37,6 +37,7 @@ jskm(
   cut.landmark = NULL,
   showpercent = F,
   status.cmprsk = NULL,
+  linewidth = 0.75,
   ...
 )
 }
@@ -104,6 +105,8 @@ jskm(
 \item{showpercent}{Shows the percentages on the right side.}
 
 \item{status.cmprsk}{Status value when competing risk analysis, Default = 2nd level of status variable}
+
+\item{linewidth}{Line witdh, Default = 0.75}
 
 \item{...}{PARAM_DESCRIPTION}
 }

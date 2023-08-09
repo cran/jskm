@@ -1,3 +1,11 @@
+# jskm 0.5.2
+
+* Update: Add `linewidth` option
+
+# jskm 0.5.1
+
+* Fix: line color problem when apply landmark analysis
+
 # jskm 0.5
 
 * Add competing risk analysis to `jskm`

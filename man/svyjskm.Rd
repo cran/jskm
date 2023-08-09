@@ -32,6 +32,7 @@ svyjskm(
   size.label.nrisk = 10,
   cut.landmark = NULL,
   showpercent = F,
+  linewidth = 0.75,
   ...
 )
 }
@@ -89,6 +90,8 @@ svyjskm(
 \item{cut.landmark}{cut-off for landmark analysis, Default = NULL}
 
 \item{showpercent}{Shows the percentages on the right side.}
+
+\item{linewidth}{Line witdh, Default = 0.75}
 
 \item{...}{PARAM_DESCRIPTION}
 }

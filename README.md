@@ -4,15 +4,13 @@ jskm
 Kaplan-Meier Plot with ‘ggplot2’: ‘survfit’ and ‘svykm’ objects from
 ‘survival’ and ‘survey’ packages.
 
-[![Build
-Status](https://travis-ci.org/jinseob2kim/jskm.svg?branch=master)](https://travis-ci.org/jinseob2kim/jskm)
 [![AppVeyor build
 status](https://ci.appveyor.com/api/projects/status/github/jinseob2kim/jskm?branch=master&svg=true)](https://ci.appveyor.com/project/jinseob2kim/jskm)
 [![Github
 action](https://github.com/jinseob2kim/jskm/workflows/R-CMD-check/badge.svg)](https://github.com/jinseob2kim/jskm/actions)
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/jskm)](https://cran.r-project.org/package=jskm)
 [![CRAN_Download_Badge](https://cranlogs.r-pkg.org/badges/jskm)](https://CRAN.R-project.org/package=jskm)
-[![codecov](https://codecov.io/github/jinseob2kim/jskm/branch/master/graphs/badge.svg)](https://codecov.io/github/jinseob2kim/jskm)
+[![codecov](https://codecov.io/github/jinseob2kim/jskm/branch/master/graphs/badge.svg)](https://app.codecov.io/github/jinseob2kim/jskm)
 [![GitHub
 issues](https://img.shields.io/github/issues/jinseob2kim/jskm.svg)](https://github.com/jinseob2kim/jskm/issues)
 [![GitHub
@@ -88,13 +86,13 @@ colon$status2 <- colon$status
 colon$status2[1:400] <- 2
 colon$status2 <- factor(colon$status2)
 fit2 <- survfit(Surv(time,status2)~rx, data=colon)
-jskm(fit2, mark = F, surv.scale = "percent", table = T)
+jskm(fit2, mark = F, surv.scale = "percent", table = T, status.cmprsk = "1")
 ```
 
 ![](man/figures/README-unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
-jskm(fit2, mark = F, surv.scale = "percent", table = T, showpercent = T, cut.landmark = 500)
+jskm(fit2, mark = F, surv.scale = "percent", table = T, status.cmprsk = "1", showpercent = T, cut.landmark = 500)
 ```
 
 ![](man/figures/README-unnamed-chunk-4-2.png)<!-- -->
