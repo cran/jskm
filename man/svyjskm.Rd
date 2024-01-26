@@ -6,6 +6,7 @@
 \usage{
 svyjskm(
   sfit,
+  theme = NULL,
   xlabs = "Time-to-event",
   ylabs = "Survival probability",
   xlims = NULL,
@@ -33,11 +34,16 @@ svyjskm(
   cut.landmark = NULL,
   showpercent = F,
   linewidth = 0.75,
+  nejm.infigure.ratiow = 0.6,
+  nejm.infigure.ratioh = 0.5,
+  nejm.infigure.ylim = c(0, 1),
   ...
 )
 }
 \arguments{
 \item{sfit}{a svykm object}
+
+\item{theme}{Theme of the plot, Default = NULL, "nejm" for NEJMOA style, "jama" for JAMA style}
 
 \item{xlabs}{x-axis label, Default: 'Time-to-event'}
 
@@ -93,6 +99,12 @@ svyjskm(
 
 \item{linewidth}{Line witdh, Default = 0.75}
 
+\item{nejm.infigure.ratiow}{Ratio of infigure width to total width, Default = 0.6}
+
+\item{nejm.infigure.ratioh}{Ratio of infigure height to total height, Default = 0.5}
+
+\item{nejm.infigure.ylim}{y-axis limit of infigure, Default = c(0,1)}
+
 \item{...}{PARAM_DESCRIPTION}
 }
 \value{
@@ -105,12 +117,12 @@ Creates a Weighted Kaplan-Meier plot - svykm.object in survey package
 DETAILS
 }
 \examples{
- library(survey)
- data(pbc, package="survival")
- pbc$randomized <- with(pbc, !is.na(trt) & trt>0)
- biasmodel <- glm(randomized~age*edema,data=pbc)
- pbc$randprob <- fitted(biasmodel)
- dpbc <- svydesign(id=~1, prob=~randprob, strata=~edema, data=subset(pbc,randomized))
- s1 <- svykm(Surv(time,status>0)~sex, design=dpbc)
- svyjskm(s1)
+library(survey)
+data(pbc, package = "survival")
+pbc$randomized <- with(pbc, !is.na(trt) & trt > 0)
+biasmodel <- glm(randomized ~ age * edema, data = pbc)
+pbc$randprob <- fitted(biasmodel)
+dpbc <- svydesign(id = ~1, prob = ~randprob, strata = ~edema, data = subset(pbc, randomized))
+s1 <- svykm(Surv(time, status > 0) ~ sex, design = dpbc)
+svyjskm(s1)
 }

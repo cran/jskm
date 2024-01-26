@@ -38,6 +38,10 @@ jskm(
   showpercent = F,
   status.cmprsk = NULL,
   linewidth = 0.75,
+  theme = NULL,
+  nejm.infigure.ratiow = 0.6,
+  nejm.infigure.ratioh = 0.5,
+  nejm.infigure.ylim = c(0, 1),
   ...
 )
 }
@@ -108,6 +112,14 @@ jskm(
 
 \item{linewidth}{Line witdh, Default = 0.75}
 
+\item{theme}{Theme of the plot, Default = NULL, "nejm" for NEJMOA style, "jama" for JAMA style}
+
+\item{nejm.infigure.ratiow}{Ratio of infigure width to total width, Default = 0.6}
+
+\item{nejm.infigure.ratioh}{Ratio of infigure height to total height, Default = 0.5}
+
+\item{nejm.infigure.ylim}{y-axis limit of infigure, Default = c(0,1)}
+
 \item{...}{PARAM_DESCRIPTION}
 }
 \value{
@@ -120,10 +132,10 @@ Creates a Kaplan-Meier plot with at risk tables below for survfit object.
 DETAILS
 }
 \examples{
- library(survival)
- data(colon)
- fit <- survfit(Surv(time,status)~rx, data=colon)
- jskm(fit, timeby=500)
+library(survival)
+data(colon)
+fit <- survfit(Surv(time, status) ~ rx, data = colon)
+jskm(fit, timeby = 500)
 }
 \author{
 Jinseob Kim, but heavily modified version of a script created by Michael Way.
