@@ -77,7 +77,7 @@ svyjskm(
 
 \item{ci}{logical. Should confidence intervals be plotted. Default = NULL}
 
-\item{linecols}{Character. Colour brewer pallettes too colour lines. Default: 'Set1', "black" for black with dashed line.}
+\item{linecols}{Character or Character vector. Colour brewer pallettes too colour lines. Default ="Set1", "black" for black with dashed line, character vector for the customization of line colors.}
 
 \item{dashed}{logical. Should a variety of linetypes be used to identify lines. Default: FALSE}
 
