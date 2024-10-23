@@ -14,9 +14,10 @@
 #' @param pval.size numeric value specifying the p-value text size. Default is 5.
 #' @param pval.coord numeric vector, of length 2, specifying the x and y coordinates of the p-value. Default values are NULL
 #' @param pval.testname logical: add '(Log-rank)' text to p-value. Default = F
-#' @param legend logical. should a legend be added to the plot? Default: TRUE
+#' @param med should a median line be added to the plot? Default = F
+#' @param legend logical. should a legend be added to the plot?
+#' @param legendposition numeric. x, y position of the legend if plotted. Default=c(0.85,0.8)
 #' @param ci logical. Should confidence intervals be plotted. Default = NULL
-#' @param legendposition numeric. x, y position of the legend if plotted. Default: c(0.85, 0.8)
 #' @param linecols Character or Character vector. Colour brewer pallettes too colour lines. Default ="Set1", "black" for black with dashed line, character vector for the customization of line colors.
 #' @param dashed logical. Should a variety of linetypes be used to identify lines. Default: FALSE
 #' @param cumhaz Show cumulaive incidence function, Default: F
@@ -68,6 +69,7 @@ svyjskm <- function(sfit,
                     pval.size = 5,
                     pval.coord = c(NULL, NULL),
                     pval.testname = F,
+                    med = FALSE,
                     legend = TRUE,
                     legendposition = c(0.85, 0.8),
                     ci = NULL,
@@ -88,7 +90,7 @@ svyjskm <- function(sfit,
                     ...) {
   surv <- strata <- lower <- upper <- NULL
 
-  if (!is.null(theme) && theme == "nejm") legendposition <- "right"
+  if (!is.null(theme) && theme == "nejm") legendposition <- legendposition
   if (is.null(timeby)) {
     if (inherits(sfit, "svykmlist")) {
       timeby <- signif(max(sapply(sfit, function(x) {
@@ -123,6 +125,7 @@ svyjskm <- function(sfit,
         "warning" %in% class(tryCatch(as.numeric(x), warning = function(w) w))
       })]
     }
+
     design1 <- design
     design1$variables[[var.event]][design1$variables[[var.time]] >= cut.landmark] <- 0
     design1$variables[[var.time]][design1$variables[[var.time]] >= cut.landmark] <- cut.landmark
@@ -138,23 +141,37 @@ svyjskm <- function(sfit,
 
     if (ci) {
       if ("varlog" %in% names(sfit[[1]])) {
-        df <- do.call(rbind, lapply(names(sfit), function(x) {
-          data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv, "lower" = pmax(0, exp(log(sfit[[x]]$surv) - 1.96 * sqrt(sfit[[x]]$varlog))), "upper" = pmin(1, exp(log(sfit[[x]]$surv) + 1.96 * sqrt(sfit[[x]]$varlog))))
-        }))
         if (!is.null(cut.landmark)) {
+          df <- do.call(rbind, lapply(names(sfit), function(x) {
+            data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv, "lower" = pmax(0, exp(log(sfit[[x]]$surv) - 1.96 * sqrt(sfit[[x]]$varlog))), "upper" = pmin(1, exp(log(sfit[[x]]$surv) + 1.96 * sqrt(sfit[[x]]$varlog))))
+          }))
           df2 <- do.call(rbind, lapply(names(sfit2), function(x) {
             data.frame("strata" = x, "time" = sfit2[[x]]$time, "surv" = sfit2[[x]]$surv, "lower" = pmax(0, exp(log(sfit2[[x]]$surv) - 1.96 * sqrt(sfit2[[x]]$varlog))), "upper" = pmin(1, exp(log(sfit2[[x]]$surv) + 1.96 * sqrt(sfit2[[x]]$varlog))))
           }))
           df <- rbind(df[df$time < cut.landmark, ], data.frame("strata" = unique(df$strata), "time" = cut.landmark, "surv" = 1, "lower" = 1, "upper" = 1), df2)
+        } else {
+          if (med == TRUE) {
+            df <- do.call(rbind, lapply(names(sfit), function(x) {
+              df2 <- data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv, "lower" = pmax(0, exp(log(sfit[[x]]$surv) - 1.96 * sqrt(sfit[[x]]$varlog))), "upper" = pmin(1, exp(log(sfit[[x]]$surv) + 1.96 * sqrt(sfit[[x]]$varlog))))
+              valid_indices <- which(df2$surv <= 0.5)
+              closest_index <- valid_indices[which.min(abs(df2$surv[valid_indices] - 0.5))]
+              df2$med <- df2[closest_index, "time"]
+              return(df2)
+            }))
+          } else {
+            df <- do.call(rbind, lapply(names(sfit), function(x) {
+              data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv, "lower" = pmax(0, exp(log(sfit[[x]]$surv) - 1.96 * sqrt(sfit[[x]]$varlog))), "upper" = pmin(1, exp(log(sfit[[x]]$surv) + 1.96 * sqrt(sfit[[x]]$varlog))))
+            }))
+          }
         }
       } else {
         stop("No CI information in svykmlist object. please run svykm with se = T option.")
       }
     } else {
-      df <- do.call(rbind, lapply(names(sfit), function(x) {
-        data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv)
-      }))
       if (!is.null(cut.landmark)) {
+        df <- do.call(rbind, lapply(names(sfit), function(x) {
+          data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv)
+        }))
         for (v in unique(df$strata)) {
           if (nrow(subset(df, time == cut.landmark & strata == v)) == 0) {
             df <- rbind(df, data.frame(strata = v, time = cut.landmark, surv = 1))
@@ -164,6 +181,20 @@ svyjskm <- function(sfit,
 
           df[df$time > cut.landmark & df$strata == v, "surv"] <- df[df$time > cut.landmark & df$strata == v, "surv"] / min(df[df$time < cut.landmark & df$strata == v, "surv"])
         }
+      } else {
+        if (med == TRUE) {
+          df <- do.call(rbind, lapply(names(sfit), function(x) {
+            df2 <- data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv)
+            valid_indices <- which(df2$surv <= 0.5)
+            closest_index <- valid_indices[which.min(abs(df2$surv[valid_indices] - 0.5))]
+            df2$med <- df2[closest_index, "time"]
+            return(df2)
+          }))
+        } else {
+          df <- do.call(rbind, lapply(names(sfit), function(x) {
+            data.frame("strata" = x, "time" = sfit[[x]]$time, "surv" = sfit[[x]]$surv)
+          }))
+        }
       }
     }
 
@@ -172,7 +203,15 @@ svyjskm <- function(sfit,
       max(x$time)
     })), by = timeby)
     if (is.null(ystratalabs)) {
+      df3 <- df[-c(1, 2), ]
       ystratalabs <- levels(df$strata)
+      if (med == TRUE) {
+        ystratalabs2 <- NULL
+        for (i in 1:length(names(sfit))) {
+          median_time <- unique(df3[df3$strata == names(sfit)[[i]], "med"])
+          ystratalabs2 <- c(ystratalabs2, paste0(ystratalabs[[i]], " (median : ", median_time, ")"))
+        }
+      }
     }
     if (is.null(xlims)) {
       xlims <- c(0, max(sapply(sfit, function(x) {
@@ -184,17 +223,26 @@ svyjskm <- function(sfit,
 
     if (ci) {
       if ("varlog" %in% names(sfit)) {
-        df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv, "lower" = pmax(0, exp(log(sfit$surv) - 1.96 * sqrt(sfit$varlog))), "upper" = pmax(0, exp(log(sfit$surv) + 1.96 * sqrt(sfit$varlog))))
         if (!is.null(cut.landmark)) {
+          df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv, "lower" = pmax(0, exp(log(sfit$surv) - 1.96 * sqrt(sfit$varlog))), "upper" = pmax(0, exp(log(sfit$surv) + 1.96 * sqrt(sfit$varlog))))
           df2 <- data.frame("strata" = "All", "time" = sfit2$time, "surv" = sfit2$surv, "lower" = pmax(0, exp(log(sfit2$surv) - 1.96 * sqrt(sfit2$varlog))), "upper" = pmax(0, exp(log(sfit2$surv) + 1.96 * sqrt(sfit2$varlog))))
           df <- rbind(df[df$time < cut.landmark, ], data.frame("strata" = "All", "time" = cut.landmark, "surv" = 1, "lower" = 1, "upper" = 1), df2)
+        } else {
+          if (med == T) {
+            df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv, "lower" = pmax(0, exp(log(sfit$surv) - 1.96 * sqrt(sfit$varlog))), "upper" = pmax(0, exp(log(sfit$surv) + 1.96 * sqrt(sfit$varlog))))
+            valid_indices <- which(df$surv <= 0.5)
+            closest_index <- valid_indices[which.min(abs(df$surv[valid_indices] - 0.5))]
+            df$med <- df[closest_index, "time"]
+          } else {
+            df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv, "lower" = pmax(0, exp(log(sfit$surv) - 1.96 * sqrt(sfit$varlog))), "upper" = pmax(0, exp(log(sfit$surv) + 1.96 * sqrt(sfit$varlog))))
+          }
         }
       } else {
         stop("No CI information in svykm object. please run svykm with se = T option.")
       }
     } else {
-      df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv)
       if (!is.null(cut.landmark)) {
+        df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv)
         if (nrow(subset(df, time == cut.landmark)) == 0) {
           df <- rbind(df, data.frame(strata = "All", time = cut.landmark, surv = 1))
         } else {
@@ -202,12 +250,22 @@ svyjskm <- function(sfit,
         }
 
         df[df$time > cut.landmark, "surv"] <- df[df$time > cut.landmark, "surv"] / min(df[df$time < cut.landmark, "surv"])
+      } else {
+        if (med == T) {
+          df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv)
+          valid_indices <- which(df$surv <= 0.5)
+          closest_index <- valid_indices[which.min(abs(df$surv[valid_indices] - 0.5))]
+          df$med <- df[closest_index, "time"]
+        } else {
+          df <- data.frame("strata" = "All", "time" = sfit$time, "surv" = sfit$surv)
+        }
       }
     }
 
     times <- seq(0, max(sfit$time), by = timeby)
     if (is.null(ystratalabs)) {
       ystratalabs <- "All"
+      ystratalabs2 <- paste0(ystratalabs, " (median : ", unique(df$med), ")")
     }
     if (is.null(xlims)) {
       xlims <- c(0, max(sfit$time))
@@ -232,12 +290,23 @@ svyjskm <- function(sfit,
 
   # Final changes to data for survival plot
   levels(df$strata) <- ystratalabs
-  zeros <- data.frame("strata" = factor(ystratalabs, levels = levels(df$strata)), "time" = 0, "surv" = 1)
-  if (ci) {
-    zeros$upper <- 1
-    zeros$lower <- 1
+  zeros <- if (med == T & is.null(cut.landmark)) {
+    data.frame("strata" = factor(ystratalabs, levels = levels(df$strata)), "time" = 0, "surv" = 1, "med" = 0.5)
+  } else {
+    data.frame("strata" = factor(ystratalabs, levels = levels(df$strata)), "time" = 0, "surv" = 1)
   }
 
+  if (ci) {
+    if (med == T & is.null(cut.landmark)) {
+      zeros$med <- NULL
+      zeros$upper <- 1
+      zeros$lower <- 1
+      zeros$med <- 0.5
+    } else {
+      zeros$upper <- 1
+      zeros$lower <- 1
+    }
+  }
   if (cumhaz) {
     zeros$surv <- 0
     if (ci) {
@@ -281,7 +350,8 @@ svyjskm <- function(sfit,
       axis.title.x = element_text(vjust = 0.7),
       panel.grid.minor = element_blank(),
       axis.line = element_line(linewidth = 0.5, colour = "black"),
-      legend.position = legendposition,
+      legend.position = "inside",
+      legend.position.inside = legendposition,
       legend.background = element_rect(fill = NULL),
       legend.key = element_rect(colour = NA),
       panel.border = element_blank(),
@@ -305,16 +375,41 @@ svyjskm <- function(sfit,
 
   # Removes the legend:
   if (legend == FALSE) {
-    p <- p + theme(legend.position = "none")
+    p <- p + guides(colour = "none", linetype = "none")
   }
 
   # Add lines too plot
   if (is.null(cut.landmark)) {
-    p <- p + geom_step(linewidth = linewidth) +
-      scale_linetype_manual(name = ystrataname, values = linetype)
+    if (med == T) {
+      p <- p + geom_step(linewidth = linewidth) +
+        scale_linetype_manual(name = ystrataname, values = linetype, labels = ystratalabs2)
+    } else {
+      p <- p + geom_step(linewidth = linewidth) +
+        scale_linetype_manual(name = ystrataname, values = linetype, labels = ystratalabs)
+    }
   } else {
     p <- p + geom_step(data = subset(df, time < cut.landmark), linewidth = linewidth) + geom_step(data = subset(df, time >= cut.landmark), linewidth = linewidth) +
-      scale_linetype_manual(name = ystrataname, values = linetype)
+      scale_linetype_manual(name = ystrataname, values = linetype, labels = ystratalabs)
+  }
+
+
+  # Add median value
+  if (med == TRUE & is.null(cut.landmark)) {
+    df3 <- df[-c(1, 2), ]
+    if (inherits(sfit, "svykm")) {
+      median_time <- unique(df3$med)
+
+      if (!is.na(median_time)) {
+        p <- p + annotate("segment", x = xlims[1], xend = median_time, y = 0.5, yend = 0.5, linewidth = 0.3, linetype = "dashed") + annotate("segment", x = median_time, xend = median_time, y = ylims[1], yend = 0.5, linewidth = 0.3, linetype = "dashed")
+      }
+    } else {
+      for (i in 1:length(names(sfit))) {
+        median_time <- unique(df3[df3$strata == names(sfit)[[i]], "med"])
+        if (!is.na(median_time)) {
+          p <- p + annotate("segment", x = xlims[1], xend = median_time, y = 0.5, yend = 0.5, linewidth = 0.3, linetype = "dashed") + annotate("segment", x = median_time, xend = median_time, y = ylims[1], yend = 0.5, linewidth = 0.3, linetype = "dashed")
+        }
+      }
+    }
   }
 
   brewer.palette <- c(
@@ -332,21 +427,60 @@ svyjskm <- function(sfit,
     col.pal <- linecols
     col.pal <- rep(col.pal, ceiling(length(ystratalabs) / length(linecols)))
   }
+  #
+  #  if (is.null(cut.landmark)) {
+  #    if (is.null(col.pal)) {
+  #      p <- p + scale_colour_brewer(name = ystrataname, palette = linecols, labels = ystratalabs2)
+  #    } else {
+  #      p <- p + scale_color_manual(name = ystrataname, values = col.pal, labels = ystratalabs2)
+  #    }} else {if (is.null(col.pal)) {
+  #      p <- p + scale_colour_brewer(name = ystrataname, palette = linecols)
+  #    } else {
+  #      p <- p + scale_color_manual(name = ystrataname, values = col.pal)
+  #    } }
 
-  if (is.null(col.pal)) {
-    p <- p + scale_colour_brewer(name = ystrataname, palette = linecols)
-  } else {
-    p <- p + scale_color_manual(name = ystrataname, values = col.pal)
-  }
 
-  # Add 95% CI to plot
-  if (ci == TRUE) {
-    if (all(linecols2 == "black")) {
-      p <- p + geom_ribbon(data = df, aes(ymin = lower, ymax = upper), alpha = 0.25, colour = NA)
-    } else if (is.null(col.pal)) {
-      p <- p + geom_ribbon(data = df, aes(ymin = lower, ymax = upper, fill = strata), alpha = 0.25, colour = NA) + scale_fill_brewer(name = ystrataname, palette = linecols)
+  if (is.null(cut.landmark)) {
+    if (med == T) {
+      if (is.null(col.pal)) {
+        p <- p + scale_colour_brewer(name = ystrataname, palette = linecols, labels = ystratalabs2)
+      } else {
+        p <- p + scale_color_manual(name = ystrataname, values = col.pal, labels = ystratalabs2)
+      }
     } else {
-      p <- p + geom_ribbon(data = df, aes(ymin = lower, ymax = upper, fill = strata), alpha = 0.25, colour = NA) + scale_fill_manual(name = ystrataname, values = col.pal)
+      if (is.null(col.pal)) {
+        p <- p + scale_colour_brewer(name = ystrataname, palette = linecols, labels = ystratalabs)
+      } else {
+        p <- p + scale_color_manual(name = ystrataname, values = col.pal, labels = ystratalabs)
+      }
+    }
+  } else {
+    if (is.null(col.pal)) {
+      p <- p + scale_colour_brewer(name = ystrataname, palette = linecols, labels = ystratalabs)
+    } else {
+      p <- p + scale_color_manual(name = ystrataname, values = col.pal, labels = ystratalabs)
+    }
+  }
+  # Add 95% CI to plot
+
+
+  if (ci == TRUE) {
+    if (med == TRUE & is.null(cut.landmark)) {
+      if (all(linecols2 == "black")) {
+        p <- p + geom_ribbon(data = df, aes(ymin = lower, ymax = upper), alpha = 0.25, colour = NA)
+      } else if (is.null(col.pal)) {
+        p <- p + geom_ribbon(data = df, aes(ymin = lower, ymax = upper, fill = strata), alpha = 0.25, colour = NA) + scale_fill_brewer(name = ystrataname, palette = linecols, labels = ystratalabs2)
+      } else {
+        p <- p + geom_ribbon(data = df, aes(ymin = lower, ymax = upper, fill = strata), alpha = 0.25, colour = NA) + scale_fill_manual(name = ystrataname, values = col.pal, labels = ystratalabs2)
+      }
+    } else {
+      if (all(linecols2 == "black")) {
+        p <- p + geom_ribbon(data = df, aes(ymin = lower, ymax = upper), alpha = 0.25, colour = NA)
+      } else if (is.null(col.pal)) {
+        p <- p + geom_ribbon(data = df, aes(ymin = lower, ymax = upper, fill = strata), alpha = 0.25, colour = NA) + scale_fill_brewer(name = ystrataname, palette = linecols, labels = ystratalabs)
+      } else {
+        p <- p + geom_ribbon(data = df, aes(ymin = lower, ymax = upper, fill = strata), alpha = 0.25, colour = NA) + scale_fill_manual(name = ystrataname, values = col.pal, labels = ystratalabs)
+      }
     }
   }
 
@@ -534,7 +668,7 @@ svyjskm <- function(sfit,
         axis.ticks = element_blank(), axis.text.y = element_text(face = "bold", hjust = 1)
       )
     data.table <- data.table +
-      theme(legend.position = "none") + xlab(NULL) + ylab(NULL)
+      guides(colour = "none", linetype = "none") + xlab(NULL) + ylab(NULL)
 
 
     # ADJUST POSITION OF TABLE FOR AT RISK
@@ -547,9 +681,9 @@ svyjskm <- function(sfit,
   #######################
   if (!is.null(theme) && theme == "nejm") {
     p2 <- p1 + coord_cartesian(ylim = nejm.infigure.ylim) + theme(
-      legend.position = "none", axis.title.x = element_blank(), axis.title.y = element_blank(),
+      axis.title.x = element_blank(), axis.title.y = element_blank(),
       axis.text = element_text(size = 10 * nejm.infigure.ratiow)
-    )
+    ) + guides(colour = "none", linetype = "none")
     p <- p + patchwork::inset_element(p2, 1 - nejm.infigure.ratiow, 1 - nejm.infigure.ratioh, 1, 1, align_to = "panel")
   }
 
