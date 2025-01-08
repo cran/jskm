@@ -24,6 +24,7 @@
 #' @param design Data design for reactive design data , Default: NULL
 #' @param subs = NULL,
 #' @param table logical: Create a table graphic below the K-M plot, indicating at-risk numbers?
+#' @param table.censor logical: Add numbers of censored in table graphic
 #' @param label.nrisk Numbers at risk label. Default = "Numbers at risk"
 #' @param size.label.nrisk Font size of label.nrisk. Default = 10
 #' @param cut.landmark cut-off for landmark analysis, Default = NULL
@@ -33,6 +34,7 @@
 #' @param nejm.infigure.ratiow Ratio of infigure width to total width, Default = 0.6
 #' @param nejm.infigure.ratioh Ratio of infigure height to total height, Default = 0.5
 #' @param nejm.infigure.ylim y-axis limit of infigure, Default = c(0,1)
+#' @param surv.by breaks unit in y-axis, default = NULL(ggplot default)
 #' @param ... PARAM_DESCRIPTION
 #' @return plot
 #' @details DETAILS
@@ -79,6 +81,7 @@ svyjskm <- function(sfit,
                     design = NULL,
                     subs = NULL,
                     table = F,
+                    table.censor = F, 
                     label.nrisk = "Numbers at risk",
                     size.label.nrisk = 10,
                     cut.landmark = NULL,
@@ -87,6 +90,7 @@ svyjskm <- function(sfit,
                     nejm.infigure.ratiow = 0.6,
                     nejm.infigure.ratioh = 0.5,
                     nejm.infigure.ylim = c(0, 1),
+                    surv.by = NULL,
                     ...) {
   surv <- strata <- lower <- upper <- NULL
 
@@ -359,8 +363,13 @@ svyjskm <- function(sfit,
       axis.line.x = element_line(linewidth = 0.5, linetype = "solid", colour = "black"),
       axis.line.y = element_line(linewidth = 0.5, linetype = "solid", colour = "black")
     ) +
-    scale_x_continuous(xlabs, breaks = times, limits = xlims) +
-    scale_y_continuous(ylabs, limits = ylims, labels = scale_labels)
+    scale_x_continuous(xlabs, breaks = times, limits = xlims)
+
+  if (!is.null(surv.by)) {
+    p <- p + scale_y_continuous(ylabs, limits = ylims, labels = scale_labels, breaks = seq(ylims[1], ylims[2], by = surv.by))
+  } else {
+    p <- p + scale_y_continuous(ylabs, limits = ylims, labels = scale_labels)
+  }
 
   if (!is.null(theme) && theme == "jama") {
     p <- p + theme(
@@ -649,7 +658,16 @@ svyjskm <- function(sfit,
       time = summary(sfit2, times = times, extend = TRUE)$time[subs3],
       n.risk = summary(sfit2, times = times, extend = TRUE)$n.risk[subs3]
     )
-
+    if(table.censor){
+      risk.data <- data.frame(
+        strata = Factor,
+        time = summary(sfit2, times = times, extend = TRUE)$time[subs3],
+        n.risk = summary(sfit2, times = times, extend = TRUE)$n.risk[subs3],
+        n.censor = summary(sfit2, times = times, extend = TRUE)$n.censor[subs3]
+      )
+      risk.data$n.risk <- paste0(risk.data$n.risk, " (", risk.data$n.censor, ")")
+      risk.data$n.censor <- NULL
+    }
 
     risk.data$strata <- factor(risk.data$strata, levels = rev(levels(risk.data$strata)))
 
@@ -682,7 +700,7 @@ svyjskm <- function(sfit,
   if (!is.null(theme) && theme == "nejm") {
     p2 <- p1 + coord_cartesian(ylim = nejm.infigure.ylim) + theme(
       axis.title.x = element_blank(), axis.title.y = element_blank(),
-      axis.text = element_text(size = 10 * nejm.infigure.ratiow)
+      axis.text = element_text(size = 10 * nejm.infigure.ratiow) + scale_y_continuous(limits = nejm.infigure.ylim, breaks = waiver(), labels = scale_labels)
     ) + guides(colour = "none", linetype = "none")
     p <- p + patchwork::inset_element(p2, 1 - nejm.infigure.ratiow, 1 - nejm.infigure.ratioh, 1, 1, align_to = "panel")
   }

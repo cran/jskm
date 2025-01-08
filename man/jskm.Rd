@@ -7,6 +7,7 @@
 jskm(
   sfit,
   table = FALSE,
+  table.censor = FALSE,
   xlabs = "Time-to-event",
   ylabs = NULL,
   xlims = c(0, max(sfit$time)),
@@ -43,6 +44,7 @@ jskm(
   nejm.infigure.ratiow = 0.6,
   nejm.infigure.ratioh = 0.5,
   nejm.infigure.ylim = c(0, 1),
+  surv.by = NULL,
   ...
 )
 }
@@ -50,6 +52,8 @@ jskm(
 \item{sfit}{a survfit object}
 
 \item{table}{logical: Create a table graphic below the K-M plot, indicating at-risk numbers?}
+
+\item{table.censor}{logical: Add numbers of censored in table graphic}
 
 \item{xlabs}{x-axis label}
 
@@ -122,6 +126,8 @@ jskm(
 \item{nejm.infigure.ratioh}{Ratio of infigure height to total height, Default = 0.5}
 
 \item{nejm.infigure.ylim}{y-axis limit of infigure, Default = c(0,1)}
+
+\item{surv.by}{breaks unit in y-axis, default = NULL(ggplot default)}
 
 \item{...}{PARAM_DESCRIPTION}
 }
