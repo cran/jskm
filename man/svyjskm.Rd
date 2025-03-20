@@ -17,9 +17,12 @@ svyjskm(
   timeby = NULL,
   main = "",
   pval = FALSE,
-  pval.size = 5,
+  pval.size = 4,
   pval.coord = c(NULL, NULL),
   pval.testname = F,
+  hr = FALSE,
+  hr.size = 2,
+  hr.coord = c(NULL, NULL),
   med = FALSE,
   legend = TRUE,
   legendposition = c(0.85, 0.8),
@@ -68,11 +71,17 @@ svyjskm(
 
 \item{pval}{logical: add the pvalue to the plot?, Default: FALSE}
 
-\item{pval.size}{numeric value specifying the p-value text size. Default is 5.}
+\item{pval.size}{numeric value specifying the p-value text size. Default is 4.}
 
 \item{pval.coord}{numeric vector, of length 2, specifying the x and y coordinates of the p-value. Default values are NULL}
 
 \item{pval.testname}{logical: add '(Log-rank)' text to p-value. Default = F}
+
+\item{hr}{logical: add the Hazard Ratio to the plot?, Default: FALSE}
+
+\item{hr.size}{numeric value specifying the Hazard Ratio text size. Default is 2.}
+
+\item{hr.coord}{numeric vector, of length 2, specifying the x and y coordinates of the Hazard Ratio. Default values are NULL}
 
 \item{med}{should a median line be added to the plot? Default = F}
 
