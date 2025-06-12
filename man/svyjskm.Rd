@@ -20,6 +20,7 @@ svyjskm(
   pval.size = 4,
   pval.coord = c(NULL, NULL),
   pval.testname = F,
+  marks = FALSE,
   hr = FALSE,
   hr.size = 2,
   hr.coord = c(NULL, NULL),
@@ -43,6 +44,7 @@ svyjskm(
   nejm.infigure.ratioh = 0.5,
   nejm.infigure.ylim = c(0, 1),
   surv.by = NULL,
+  nejm.surv.by = NULL,
   ...
 )
 }
@@ -76,6 +78,8 @@ svyjskm(
 \item{pval.coord}{numeric vector, of length 2, specifying the x and y coordinates of the p-value. Default values are NULL}
 
 \item{pval.testname}{logical: add '(Log-rank)' text to p-value. Default = F}
+
+\item{marks}{logical: should censoring marks be added?}
 
 \item{hr}{logical: add the Hazard Ratio to the plot?, Default: FALSE}
 
@@ -122,6 +126,8 @@ svyjskm(
 \item{nejm.infigure.ylim}{y-axis limit of infigure, Default = c(0,1)}
 
 \item{surv.by}{breaks unit in y-axis, default = NULL(ggplot default)}
+
+\item{nejm.surv.by}{breaks unit in y-axis in nejm figure, default = NULL(ggplot default)}
 
 \item{...}{PARAM_DESCRIPTION}
 }

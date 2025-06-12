@@ -1,3 +1,11 @@
+# jskm 0.5.13
+
+* Update: Add `nejm.surv.by` option to y-axis breaks in `jskm` and `svyjskm`. 
+
+# jskm 0.5.12
+
+* Update: Add censoring marks
+
 # jskm 0.5.11
 
 * Update: Add Hazard ratio display: **hr** option.
