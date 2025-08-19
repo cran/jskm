@@ -1,3 +1,11 @@
+# jskm 0.5.16
+
+* Update: jskm now supports more reasonable colors used in various journals(eg. npg, aaas, nejm, etc...)
+
+# jskm 0.5.15
+
+* Update: Auto-load data in `cmprsk` branch.
+
 # jskm 0.5.14
 
 * Update: Add `nejm.infigure.xlim` option to x-axis breaks in `jskm` and `svyjskm`.
