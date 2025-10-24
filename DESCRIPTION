@@ -1,7 +1,7 @@
 Package: jskm
 Title: Kaplan-Meier Plot with 'ggplot2'
-Version: 0.5.20
-Date: 2025-10-01
+Version: 0.5.21
+Date: 2025-10-24
 Authors@R: c(person("Jinseob", "Kim", email = "jinseob2kim@gmail.com", role = c("aut", "cre"),  comment = c(ORCID = "0000-0002-9403-605X")),
              person("yoonkyoung", "Chun", email = "rachel200357@gmail.com", role = "aut"),
              person("Zarathu", role = c("cph", "fnd")),
@@ -13,8 +13,8 @@ Description: The function 'jskm()' creates publication quality Kaplan-Meier plot
 Depends: R (>= 3.4.0)
 License: Apache License 2.0
 Encoding: UTF-8
-Imports: ggplot2, ggpubr, survival, survey, scales, patchwork, cmprsk,
-        stats, ggsci
+Imports: ggplot2 (>= 3.5.0), ggpubr, survival, survey, scales,
+        patchwork, cmprsk, stats, ggsci
 RoxygenNote: 7.3.2
 URL: https://github.com/jinseob2kim/jskm,
         https://jinseob2kim.github.io/jskm/
@@ -22,7 +22,7 @@ BugReports: https://github.com/jinseob2kim/jstable/issues
 Suggests: testthat, knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2025-10-01 02:44:15 UTC; js
+Packaged: 2025-10-24 09:14:10 UTC; js
 Author: Jinseob Kim [aut, cre] (ORCID: <https://orcid.org/0000-0002-9403-605X>),
   yoonkyoung Chun [aut],
   Zarathu [cph, fnd],
@@ -31,4 +31,4 @@ Author: Jinseob Kim [aut, cre] (ORCID: <https://orcid.org/0000-0002-9403-605X>),
   Wonbin Hahn [aut]
 Maintainer: Jinseob Kim <jinseob2kim@gmail.com>
 Repository: CRAN
-Date/Publication: 2025-10-01 05:20:08 UTC
+Date/Publication: 2025-10-24 09:40:09 UTC
