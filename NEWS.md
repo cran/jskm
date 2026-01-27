@@ -1,3 +1,15 @@
+# jskm 0.6.0
+
+* Update: Improve UI consistency (linewidth, axis alignment, risk table style) for `jskm` and `svyjskm`.
+
+* Update: Auto-append `(%)` to y-axis label when `surv.scale = "percent"`.
+
+* Fix: `svyjskm` error when median survival is not reached.
+
+* Fix: `ylabs` initialization logic in `svyjskm`.
+
+* Internal: Remove dependency on `scales` package.
+
 # jskm 0.5.22
 * Update: Add `med.decimal` option to `jskm`and `svyjskm`.
 
